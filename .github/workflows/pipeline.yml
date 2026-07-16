@@ -20,6 +20,16 @@ on:
     - cron: "0 20 * * *"
   # Botão "Run workflow" na aba Actions, para rodar na mão quando quiser
   workflow_dispatch:
+    inputs:
+      forcar:
+        description: "Forçar geração de post (ignora o intervalo mínimo entre posts)"
+        type: boolean
+        default: false
+
+# O passo "Enviar artes" faz push NESTE repo usando o token padrão do
+# Actions — que por padrão é somente-leitura. Aqui liberamos a escrita.
+permissions:
+  contents: write
 
 # Nunca duas execuções ao mesmo tempo (evita post duplicado)
 concurrency:
@@ -62,7 +72,8 @@ jobs:
         working-directory: codigo
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python -m src.main
+        # No disparo manual com "forcar" marcado, ignora a trava de cadência
+        run: python -m src.main ${{ inputs.forcar && '--forcar' || '' }}
 
       # ---- 4. Aprovação humana via Telegram ----
       # Reenvia pendentes, processa cliques da fila e espera novos
